@@ -1,0 +1,10 @@
+Flask
+Flask-SQLAlchemy
+psycopg2-binary
+python-dotenv
+marshmallow
+marshmallow-sqlalchemy
+requests
+Flask-Cors==3.0.10
+flask-restful
+flask_marshmallow

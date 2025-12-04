@@ -1,0 +1,12 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "nixpacksPlan": {
+      "file": "Microservicios/autenticacion"
+    }
+  },
+  "deploy": {
+    "startCommand": "gunicorn main:app --bind 0.0.0.0:5000",
+    "dir": "Microservicios/autenticacion"
+  }
+}

@@ -1,0 +1,244 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_container
+    restart: always
+    networks:
+      - backend
+    environment:
+      POSTGRES_USER: USUARIO_PONERLO
+      POSTGRES_PASSWORD: PONER_CLAVE
+      POSTGRES_DB: BASE_DE_DATOS
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    networks:
+      - backend
+    environment:
+      PGADMIN_DEFAULT_EMAIL: CREDENCIALES_DE_PGADMIN
+      PGADMIN_DEFAULT_PASSWORD: CREDENCIALES_DE_PGADMIN
+    ports:
+      - "5050:8080"
+    depends_on:
+      - db
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_container
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight_ui
+    ports:
+      - "5540:5540"
+    networks:
+      - backend
+    depends_on:
+      - redis
+
+  autenticacion:
+    build: ./Microservicios/autenticacion
+    container_name: autenticacion_service
+    networks:
+      - backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+      - redis
+
+  clientes:
+    build: ./Microservicios/clientes
+    container_name: clientes_service
+    networks:
+      - backend
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+    command: ["/wait-for-it.sh", "db", "python", "main.py"]
+
+
+  configuracion:
+    build: ./Microservicios/configuracion
+    container_name: configuracion_service
+    networks:
+      - backend
+    ports:
+      - "5002:5002"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5002"]
+    volumes:
+      - ./Microservicios/configuracion/app/.ssh/id_rsa:/app/.ssh/id_rsa:ro
+    
+
+  equipos_red:
+    build: ./Microservicios/equipos_red
+    container_name: equipos_red_service
+    networks:
+      - backend
+    ports:
+      - "5004:5004"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5004"]
+
+  planes_internet:
+    build: ./Microservicios/planes_internet
+    container_name: planes_internet_service
+    networks:
+      - backend
+    ports:
+      - "5005:5005"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+      - configuracion
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5005"]
+
+  contratos:
+    build: ./Microservicios/contratos
+    container_name: contratos_service
+    networks:
+      - backend
+    ports:
+      - "5006:5006"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+      - configuracion
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5006"]
+    volumes:
+      - ./Microservicios/contratos/templates:/app/templates
+      - ./Microservicios/contratos:/app
+      - ./Microservicios/contratos/app/static/contratos:/app/static/contratos
+
+  gestion_servicio:
+    build: ./Microservicios/gestion_servicio
+    container_name: gestion_servicio
+    networks:
+      - backend
+    ports:
+      - "5007:5007"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+      - configuracion
+    command: ["python", "main.py"]
+
+  instalaciones_service:
+    build: ./Microservicios/instalaciones_service
+    container_name: instalaciones_service
+    networks:
+      - backend
+    ports:
+      - "5010:5010"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    depends_on:
+      - db
+      - clientes
+      - autenticacion
+      - contratos
+      - planes_internet
+      - configuracion
+      - equipos_red
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5010"]
+    volumes:
+      - ./Microservicios/instalaciones_service/templates:/app/templates
+      - ./Microservicios/instalaciones_service:/app
+      - ./Microservicios/instalaciones_service/archivos/ordenes:/app/archivos/ordenes
+
+  pagos:
+    build: ./Microservicios/pagos
+    container_name: pagos_service
+    networks:
+      - backend
+    ports:
+      - "5008:5008"
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=main.py
+    volumes:
+      - ./Microservicios/pagos/app/archivos:/app/archivos    
+    
+    depends_on:
+      - db
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5008"]
+
+  cronjobs:
+    build: ./Microservicios/cronjobs
+    container_name: cron_verificador
+    depends_on:
+      - pagos
+    networks:
+      - backend   
+
+  chatbot:
+    build: ./Microservicios/chatbot
+    container_name: chatbot_service
+    networks:
+      - backend
+    ports:
+      - "5009:5009"
+    env_file:
+      - .env
+    environment:
+  
+      - poner las variables de entorno necesarias aqui
+    volumes:
+      - ./Microservicios/chatbot/credentials/
+      - configuracion
+      - contratos
+      - pagos
+      - planes_internet
+      - clientes
+      - autenticacion
+      - instalaciones_service
+      - gestion_servicio
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:

@@ -1,0 +1,13 @@
+'/Microservicios/Microservicios/autenticacion/.env'
+'/Microservicios/Microservicios/configuracion/.env'
+'/Microservicios/Microservicios/clientes/.env'
+'/Microservicios/Microservicios/contratos/.env'
+'/Microservicios/Microservicios/equipos_red/.env'
+'/Microservicios/Microservicios/gestion_servicio/.env'
+'/Microservicios/Microservicios/instalaciones_service/.env'
+'/Microservicios/Microservicios/pagos/.env'
+'/Microservicios/Microservicios/planes_internet/.env'
+
+# Nunca subir credenciales del chatbot
+Microservicios/Microservicios/chatbot/credentials/
+*.json

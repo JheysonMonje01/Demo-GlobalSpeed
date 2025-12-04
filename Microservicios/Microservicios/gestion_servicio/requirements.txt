@@ -1,0 +1,11 @@
+flask
+flask_sqlalchemy
+flask_marshmallow
+marshmallow_sqlalchemy
+flask_jwt_extended
+requests
+python-dotenv
+paramiko
+psycopg2-binary
+Unidecode
+Flask-Cors==4.0.0

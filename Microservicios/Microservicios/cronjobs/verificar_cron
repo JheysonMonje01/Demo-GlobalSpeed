@@ -1,0 +1,1 @@
+* * * * * /app/verificar_vencimientos.sh >> /var/log/cron.log 2>&1
